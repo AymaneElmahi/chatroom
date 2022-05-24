@@ -8,7 +8,7 @@ all: client server
 client: client.o tools.o
 	$(CC) $(LFLAGS) client.o tools.o -o client
 
-server: server.o chatroom_utils.o
+server: server.o tools.o
 	$(CC) $(LFLAGS) server.o tools.o -o server
 
 

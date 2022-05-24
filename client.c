@@ -1,18 +1,7 @@
-/*
-*
-* Chatroom - a simple linux commandline client/server C program for group chat.
-* Author: Andrew Herriot
-* License: Public Domain
-*
-*/
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdbool.h>
-
-
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -22,7 +11,7 @@
 // get a username from the user.
 void get_username(char *username)
 {
-  while(true)
+  while(1)
   {
     printf("Enter a username: ");
     fflush(stdout);
@@ -32,8 +21,8 @@ void get_username(char *username)
 
     if(strlen(username) > 20)
     {
-      // clear_stdin_buffer();
-      puts("Username must be 20 characters or less.");
+        
+      puts("Username must not be longer than 20 characters \n.");
 
     } else {
       break;
@@ -42,7 +31,7 @@ void get_username(char *username)
 }
 
 //send local username to the server.
-void set_username(connection_info *connection)
+void set_username(info *connection)
 {
   message msg;
   msg.type = SET_USERNAME;
@@ -55,17 +44,17 @@ void set_username(connection_info *connection)
   }
 }
 
-void stop_client(connection_info *connection)
+void stop_client(info *connection)
 {
   close(connection->socket);
   exit(0);
 }
 
 //initialize connection to the server.
-void connect_to_server(connection_info *connection, char *address, char *port)
+void connect_to_server(info *connection, char *address, char *port)
 {
 
-  while(true)
+  while(1)
   {
     get_username(connection->username);
 
@@ -99,85 +88,84 @@ void connect_to_server(connection_info *connection, char *address, char *port)
     else if(recv_val == 0)
     {
       close(connection->socket);
-      printf("The username \"%s\" is taken, please try another name.\n", connection->username);
+      printf("The username %s is already used, please choose another one\n", connection->username);
       continue;
     }
 
     break;
   }
 
-
   puts("Connected to server.");
   puts("Type /help for usage.");
 }
 
 
-void handle_user_input(connection_info *connection)
+void handle_user_input(info *connection)
 {
-  char input[255];
-  fgets(input, 255, stdin);
-  trim_newline(input);
+    char input[255];
+    fgets(input, 255, stdin);
+    trim_newline(input);
 
-  if(strcmp(input, "/q") == 0 || strcmp(input, "/quit") == 0)
-  {
-    stop_client(connection);
-  }
-  else if(strcmp(input, "/l") == 0 || strcmp(input, "/list") == 0)
-  {
-    message msg;
-    msg.type = GET_USERS;
-
-    if(send(connection->socket, &msg, sizeof(message), 0) < 0)
+    if(strcmp(input, "/q") == 0 || strcmp(input, "/quit") == 0)
     {
-        perror("Send failed");
-        exit(1);
+      stop_client(connection);
     }
-  }
-  else if(strcmp(input, "/h") == 0 || strcmp(input, "/help") == 0)
-  {
-    puts("/quit or /q: Exit the program.");
-    puts("/help or /h: Displays help information.");
-    puts("/list or /l: Displays list of users in chatroom.");
-    puts("/m <username> <message> Send a private message to given username.");
-  }
-  else if(strncmp(input, "/m", 2) == 0)
-  {
-    message msg;
-    msg.type = PRIVATE_MESSAGE;
-
-    char *toUsername, *chatMsg;
-
-    toUsername = strtok(input+3, " ");
-
-    if(toUsername == NULL)
+    else if(strcmp(input, "/l") == 0 || strcmp(input, "/list") == 0)
     {
-      puts(KRED "The format for private messages is: /m <username> <message>" RESET);
-      return;
-    }
+      message msg;
+      msg.type = GET_USERS;
 
-    if(strlen(toUsername) == 0)
+      if(send(connection->socket, &msg, sizeof(message), 0) < 0)
+      {
+          perror("Send failed");
+          exit(1);
+      }
+    }
+    else if(strcmp(input, "/h") == 0 || strcmp(input, "/help") == 0)
     {
-      puts(KRED "You must enter a username for a private message." RESET);
-      return;
+        puts("/quit or /q: Exit the program.");
+        puts("/help or /h: Show help information.");
+        puts("/list or /l: Show list of users in chatroom.");
+        puts("/m <username> <message> Send a private message to given username.");
     }
-
-    if(strlen(toUsername) > 20)
+    else if(strncmp(input, "/m", 2) == 0)
     {
-      puts(KRED "The username must be between 1 and 20 characters." RESET);
-      return;
-    }
 
-    chatMsg = strtok(NULL, "");
+      message msg;
+      msg.type = PRIVATE_MESSAGE;
 
-    if(chatMsg == NULL)
-    {
-      puts(KRED "You must enter a message to send to the specified user." RESET);
-      return;
-    }
+      char *specific_username, *chatMsg;
 
-    //printf("|%s|%s|\n", toUsername, chatMsg);
-    strncpy(msg.username, toUsername, 20);
-    strncpy(msg.data, chatMsg, 255);
+      specific_username = strtok(input+3, " ");
+
+      if(specific_username == NULL)
+      {
+        puts(KRED "The format for private messages is: /m <username> <message>" RESET);
+        return;
+      }
+
+      if(strlen(specific_username) == 0)
+      {
+        puts(KRED "You must enter a username for a private message." RESET);
+        return;
+      }
+
+      if(strlen(specific_username) > 20)
+      {
+        puts(KRED "The username must not exceed 20 characters." RESET);
+        return;
+      }
+
+      chatMsg = strtok(NULL, "");
+
+      if(chatMsg == NULL)
+      {
+        puts(KRED "You must enter a message to send to the specified user." RESET);
+        return;
+      }
+
+      strncpy(msg.username, specific_username, 20);
+      strncpy(msg.data, chatMsg, 255);
 
     if(send(connection->socket, &msg, sizeof(message), 0) < 0)
     {
@@ -192,15 +180,13 @@ void handle_user_input(connection_info *connection)
     msg.type = PUBLIC_MESSAGE;
     strncpy(msg.username, connection->username, 20);
 
-    // clear_stdin_buffer();
-
     if(strlen(input) == 0) {
         return;
     }
 
     strncpy(msg.data, input, 255);
 
-    //Send some data
+    //Send data
     if(send(connection->socket, &msg, sizeof(message), 0) < 0)
     {
         perror("Send failed");
@@ -212,7 +198,7 @@ void handle_user_input(connection_info *connection)
 
 }
 
-void handle_server_message(connection_info *connection)
+void handle_server_message(info *connection)
 {
   message msg;
 
@@ -246,10 +232,6 @@ void handle_server_message(connection_info *connection)
       printf("%s", msg.data);
     break;
 
-    case SET_USERNAME:
-      //TODO: implement: name changes in the future?
-    break;
-
     case PUBLIC_MESSAGE:
       printf(KGRN "%s" RESET ": %s\n", msg.username, msg.data);
     break;
@@ -271,7 +253,7 @@ void handle_server_message(connection_info *connection)
 
 int main(int argc, char *argv[])
 {
-  connection_info connection;
+  info connection;
   fd_set file_descriptors;
 
   if (argc != 3) {
@@ -281,8 +263,8 @@ int main(int argc, char *argv[])
 
   connect_to_server(&connection, argv[1], argv[2]);
 
-  //keep communicating with server
-  while(true)
+  //establish a communication with the server
+  while(1)
   {
     FD_ZERO(&file_descriptors);
     FD_SET(STDIN_FILENO, &file_descriptors);

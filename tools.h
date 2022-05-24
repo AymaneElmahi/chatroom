@@ -53,12 +53,12 @@ typedef struct
 } message;
 
 //structure to hold client connection information
-typedef struct connection_info
+typedef struct info
 {
   int socket;
   struct sockaddr_in address;
   char username[20];
-} connection_info;
+} info;
 
 
 // Removes the trailing newline character from a string.

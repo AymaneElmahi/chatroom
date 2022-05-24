@@ -23,7 +23,7 @@
 
 #define MAX_CLIENTS 4
 
-void initialize_server(connection_info *server_info, int port)
+void initialize_server(info *server_info, int port)
 {
     if ((server_info->socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -59,7 +59,7 @@ void initialize_server(connection_info *server_info, int port)
     printf("Waiting for incoming connections...\n");
 }
 
-void send_public_message(connection_info clients[], int sender, char *message_text)
+void send_public_message(info clients[], int sender, char *message_text)
 {
     message msg;
     msg.type = PUBLIC_MESSAGE;
@@ -79,7 +79,7 @@ void send_public_message(connection_info clients[], int sender, char *message_te
     }
 }
 
-void send_private_message(connection_info clients[], int sender,
+void send_private_message(info clients[], int sender,
                           char *username, char *message_text)
 {
     message msg;
@@ -111,7 +111,7 @@ void send_private_message(connection_info clients[], int sender,
     }
 }
 
-void send_connect_message(connection_info *clients, int sender)
+void send_connect_message(info *clients, int sender)
 {
     message msg;
     msg.type = CONNECT;
@@ -142,7 +142,7 @@ void send_connect_message(connection_info *clients, int sender)
     }
 }
 
-void send_disconnect_message(connection_info *clients, char *username)
+void send_disconnect_message(info *clients, char *username)
 {
     message msg;
     msg.type = DISCONNECT;
@@ -161,7 +161,7 @@ void send_disconnect_message(connection_info *clients, char *username)
     }
 }
 
-void send_user_list(connection_info *clients, int receiver)
+void send_user_list(info *clients, int receiver)
 {
     message msg;
     msg.type = GET_USERS;
@@ -199,7 +199,7 @@ void send_too_full_message(int socket)
 }
 
 // close all the sockets before exiting
-void stop_server(connection_info connection[])
+void stop_server(info connection[])
 {
     int i;
     for (i = 0; i < MAX_CLIENTS; i++)
@@ -210,7 +210,7 @@ void stop_server(connection_info connection[])
     exit(0);
 }
 
-void handle_client_message(connection_info clients[], int sender)
+void handle_client_message(info clients[], int sender)
 {
     int read_size;
     message msg;
@@ -263,8 +263,8 @@ void handle_client_message(connection_info clients[], int sender)
     }
 }
 
-int construct_fd_set(fd_set *set, connection_info *server_info,
-                     connection_info clients[])
+int construct_fd_set(fd_set *set, info *server_info,
+                     info clients[])
 {
     FD_ZERO(set);
     FD_SET(STDIN_FILENO, set);
@@ -286,7 +286,7 @@ int construct_fd_set(fd_set *set, connection_info *server_info,
     return max_fd;
 }
 
-void handle_new_connection(connection_info *server_info, connection_info clients[])
+void handle_new_connection(info *server_info, info clients[])
 {
     int new_socket;
     int address_len;
@@ -313,7 +313,7 @@ void handle_new_connection(connection_info *server_info, connection_info clients
     }
 }
 
-void handle_user_input(connection_info clients[])
+void handle_user_input(info clients[])
 {
     char input[255];
     fgets(input, sizeof(input), stdin);
@@ -331,8 +331,8 @@ int main(int argc, char *argv[])
 
     fd_set file_descriptors;
 
-    connection_info server_info;
-    connection_info clients[MAX_CLIENTS];
+    info server_info;
+    info clients[MAX_CLIENTS];
 
     int i;
     for (i = 0; i < MAX_CLIENTS; i++)
