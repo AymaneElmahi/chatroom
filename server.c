@@ -1,10 +1,4 @@
-/*
- *
- * Chatroom - a simple linux commandline client/server C program for group chat.
- * Author: Andrew Herriot
- * License: Public Domain
- *
- */
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,42 +15,42 @@
 
 #include "tools.h"
 
-#define MAX_CLIENTS 4
+#define MAX_CLIENTS 10
 
-void initialize_server(info *server_info, int port)
+void start_server(info *server_info, int port)
 {
-    if ((server_info->socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    // create a socket
+    if ((server_info->socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
-        perror("Failed to create socket");
+        perror("Error: creation socket");
         exit(1);
     }
 
+    // set the socket address
+
+    // adress family
     server_info->address.sin_family = AF_INET;
-    server_info->address.sin_addr.s_addr = INADDR_ANY;
+    // IPv4 adress of server (loopback)
+    server_info->address.sin_addr.s_addr = htonl(INADDR_ANY);
+    // port number
     server_info->address.sin_port = htons(port);
 
+    // bind the socket to the address
     if (bind(server_info->socket, (struct sockaddr *)&server_info->address, sizeof(server_info->address)) < 0)
     {
-        perror("Binding failed");
+        perror("Error: bind ");
         exit(1);
     }
 
-    const int optVal = 1;
-    const socklen_t optLen = sizeof(optVal);
-    if (setsockopt(server_info->socket, SOL_SOCKET, SO_REUSEADDR, (void *)&optVal, optLen) < 0)
+    // listen for connections
+    if (listen(server_info->socket, 5) < 0)
     {
-        perror("Set socket option failed");
-        exit(1);
-    }
-
-    if (listen(server_info->socket, 3) < 0)
-    {
-        perror("Listen failed");
+        perror("Error: listen ");
         exit(1);
     }
 
     // Accept and incoming connection
-    printf("Waiting for incoming connections...\n");
+    printf("Waiting for clients\n");
 }
 
 void send_public_message(info clients[], int sender, char *message_text)
@@ -154,7 +148,7 @@ void send_disconnect_message(info *clients, char *username)
         {
             if (send(clients[i].socket, &msg, sizeof(msg), 0) < 0)
             {
-                perror("Send failed");
+                perror("Error: send");
                 exit(1);
             }
         }
@@ -167,8 +161,7 @@ void send_user_list(info *clients, int receiver)
     msg.type = GET_USERS;
     char *list = msg.data;
 
-    int i;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < MAX_CLIENTS; i++)
     {
         if (clients[i].socket != 0)
         {
@@ -179,7 +172,7 @@ void send_user_list(info *clients, int receiver)
 
     if (send(clients[receiver].socket, &msg, sizeof(msg), 0) < 0)
     {
-        perror("Send failed");
+        perror("Error: send");
         exit(1);
     }
 }
@@ -191,36 +184,33 @@ void send_too_full_message(int socket)
 
     if (send(socket, &too_full_message, sizeof(too_full_message), 0) < 0)
     {
-        perror("Send failed");
+        perror("Error: send");
         exit(1);
     }
 
     close(socket);
 }
 
-// close all the sockets before exiting
-void stop_server(info connection[])
+// close all the sockets then exit
+void stop_server(info clients[])
 {
-    int i;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < MAX_CLIENTS; i++)
     {
-        // send();
-        close(connection[i].socket);
+        close(clients[i].socket);
     }
     exit(0);
 }
 
-void handle_client_message(info clients[], int sender)
+void client_message(info clients[], int id)
 {
-    int read_size;
     message msg;
 
-    if ((read_size = recv(clients[sender].socket, &msg, sizeof(message), 0)) == 0)
+    if ((recv(clients[id].socket, &msg, sizeof(message), 0)) == 0)
     {
-        printf("User disconnected: %s.\n", clients[sender].username);
-        close(clients[sender].socket);
-        clients[sender].socket = 0;
-        send_disconnect_message(clients, clients[sender].username);
+        printf(KRED "Client disconnected: %s.\n" RESET, clients[id].username);
+        close(clients[id].socket);
+        clients[id].socket = 0;
+        send_disconnect_message(clients, clients[id].username);
     }
     else
     {
@@ -228,7 +218,7 @@ void handle_client_message(info clients[], int sender)
         switch (msg.type)
         {
         case GET_USERS:
-            send_user_list(clients, sender);
+            send_user_list(clients, id);
             break;
 
         case SET_USERNAME:;
@@ -237,23 +227,23 @@ void handle_client_message(info clients[], int sender)
             {
                 if (clients[i].socket != 0 && strcmp(clients[i].username, msg.username) == 0)
                 {
-                    close(clients[sender].socket);
-                    clients[sender].socket = 0;
+                    close(clients[id].socket);
+                    clients[id].socket = 0;
                     return;
                 }
             }
 
-            strcpy(clients[sender].username, msg.username);
-            printf("User connected: %s\n", clients[sender].username);
-            send_connect_message(clients, sender);
+            strcpy(clients[id].username, msg.username);
+            printf(KGRN "Client connected: %s\n" RESET, clients[id].username);
+            send_connect_message(clients, id);
             break;
 
         case PUBLIC_MESSAGE:
-            send_public_message(clients, sender, msg.data);
+            send_public_message(clients, id, msg.data);
             break;
 
         case PRIVATE_MESSAGE:
-            send_private_message(clients, sender, msg.username, msg.data);
+            send_private_message(clients, id, msg.username, msg.data);
             break;
 
         default:
@@ -263,12 +253,8 @@ void handle_client_message(info clients[], int sender)
     }
 }
 
-int construct_fd_set(fd_set *set, info *server_info,
-                     info clients[])
+int get_max_fd(fd_set *set, info *server_info, info clients[])
 {
-    FD_ZERO(set);
-    FD_SET(STDIN_FILENO, set);
-    FD_SET(server_info->socket, set);
 
     int max_fd = server_info->socket;
     int i;
@@ -286,34 +272,32 @@ int construct_fd_set(fd_set *set, info *server_info,
     return max_fd;
 }
 
-void handle_new_connection(info *server_info, info clients[])
+void case_connection(info *server_info, info clients[])
 {
     int new_socket;
     int address_len;
     new_socket = accept(server_info->socket, (struct sockaddr *)&server_info->address, (socklen_t *)&address_len);
-
-    if (new_socket < 0)
+    if (new_socket == -1)
     {
-        perror("Accept Failed");
+        perror("Error: accept");
         exit(1);
     }
 
-    int i;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < MAX_CLIENTS; i++)
     {
         if (clients[i].socket == 0)
         {
             clients[i].socket = new_socket;
             break;
         }
-        else if (i == MAX_CLIENTS - 1) // if we can accept no more clients
+        else if (i == MAX_CLIENTS - 1)
         {
             send_too_full_message(new_socket);
         }
     }
 }
 
-void handle_user_input(info clients[])
+void case_user(info clients[])
 {
     char input[255];
     fgets(input, sizeof(input), stdin);
@@ -327,52 +311,61 @@ void handle_user_input(info clients[])
 
 int main(int argc, char *argv[])
 {
-    puts("Starting server.");
-
-    fd_set file_descriptors;
-
-    info server_info;
-    info clients[MAX_CLIENTS];
-
-    int i;
-    for (i = 0; i < MAX_CLIENTS; i++)
-    {
-        clients[i].socket = 0;
-    }
-
+    // check if the port number is given
     if (argc != 2)
     {
-        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
+        fprintf(stderr, KRED "Usage: %s <port>\n" RESET, argv[0]);
         exit(1);
     }
 
-    initialize_server(&server_info, atoi(argv[1]));
+    printf(KGRN "Server started.\n" RESET);
 
-    while (true)
+    // initialize server and client info
+    info server_info;
+    info clients[MAX_CLIENTS];
+    memset(clients, 0, sizeof(clients));
+
+    // initialize server socket
+    start_server(&server_info, atoi(argv[1]));
+
+    // initialize fd_set
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    FD_SET(server_info.socket, &fds);
+
+    while (1)
     {
-        int max_fd = construct_fd_set(&file_descriptors, &server_info, clients);
+        fd_set read_fds = fds;
+        // get the max fd for select
+        int max_fd = get_max_fd(&read_fds, &server_info, clients);
 
-        if (select(max_fd + 1, &file_descriptors, NULL, NULL, NULL) < 0)
+        // select on all sockets
+        if (select(max_fd + 1, &read_fds, NULL, NULL, 0) == -1)
         {
-            perror("Select Failed");
+            perror("Error: select");
             stop_server(clients);
         }
 
-        if (FD_ISSET(STDIN_FILENO, &file_descriptors))
+        // case: user input
+        if (FD_ISSET(STDIN_FILENO, &read_fds))
         {
-            handle_user_input(clients);
+            case_user(clients);
         }
 
-        if (FD_ISSET(server_info.socket, &file_descriptors))
+        // case: new connection
+        if (FD_ISSET(server_info.socket, &read_fds))
         {
-            handle_new_connection(&server_info, clients);
+            case_connection(&server_info, clients);
         }
 
-        for (i = 0; i < MAX_CLIENTS; i++)
+        // case: client message
+        for (int i = 0; i < MAX_CLIENTS; i++)
         {
-            if (clients[i].socket > 0 && FD_ISSET(clients[i].socket, &file_descriptors))
+            if (clients[i].socket > 0 && FD_ISSET(clients[i].socket, &read_fds))
             {
-                handle_client_message(clients, i);
+                // client message
+                client_message(clients, i);
             }
         }
     }
