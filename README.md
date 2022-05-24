@@ -109,12 +109,12 @@ You can use the localhost ip address (127.0.0.1) and the port you chose.
 
 by writing /help in the client terminal, you can see the available commands:
 
-    ```sh
-    /help or /h
-    /quit or /q
-    /list or /l
-    /m <username> <message>
-    ```
+```sh
+/help or /h
+/quit or /q
+/list or /l
+/m <username> <message>
+```
 
 each command is explained after the /help command.
 
