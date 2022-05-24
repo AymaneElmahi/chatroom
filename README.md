@@ -53,8 +53,6 @@
 
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
 First of all we should note that this is a school project.
 It's a "chatroom" application. It consists of a server and clients. It's like a message group on Whatsapp or messenger or whatever. Using the same locam IP adress and the same port, the clients can connect to the server and send messages to each other.
 
