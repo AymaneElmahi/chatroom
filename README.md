@@ -131,6 +131,7 @@ This project was done by my collegue Mohamed Faid and myself Aymane Elmahi.
 ## Contact
 
 Mohamed Faid: faidm60@gmail.com
+
 Aymane Elmahi: elmahi.aymane@gmail.com
 
 Project Link: [https://github.com/AymaneElmahi/chatroom](https://github.com/AymaneElmahi/chatroom)
