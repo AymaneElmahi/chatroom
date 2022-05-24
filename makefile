@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc 
 DEBUG = -g
 CFLAGS = -Wall -lpthread -c $(DEBUG)
 LFLAGS = -Wall -lpthread $(DEBUG)

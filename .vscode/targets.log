@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue May 24 21:47:34 2022
+# Make data base, printed on Tue May 24 23:03:30 2022
 
 # Variables
 
@@ -93,7 +93,7 @@ LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 LOGNAME = aymane
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # automatic
@@ -101,7 +101,8 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # environment
 MAKELEVEL := 0
 # environment
-PLATFORMIO_PATH = /home/aymane/.platformio/python3/bin:/home/aymane/.vscode-server/bin/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5/bin/remote-cli:/home/aymane/.local/bin:/home/aymane/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files/Intel/WiFi/bin/:/mnt/c/Program Files/Common Files/Intel/WirelessCommon/:/mnt/c/Program Files (x86)/Python39-12:/mnt/c/Coq/bin:/mnt/c/Program Files/MATLAB/R2021b/bin/win64:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/MATLAB/R2021b/extern/bin/win64:/mnt/c/Users/Aymane/AppData/Local/Programs/Python/Python39/Scripts/:/mnt/c/Users/Aymane/AppData/Local/Programs/Python/Python39/:/mnt/c/Users/Aymane/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/bin/Firefox_Extension/{442718d9-475e-452a-b3e1-fb1ee16b8e9f}/components:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/ucrt:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/bin/Qt:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/bin/Ssl:/mnt/c/Users/Aymane/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/Aymane/AppData/Local/Programs/Microsoft VS Code Insiders/bin:/snap/bin
+PLATFORMIO_PATH = /home/aymane/.platformio/penv/bin:/home/aymane/.platformio/penv:/home/aymane/.platformio/python3/bin:/home/aymane/.vscode-server/bin/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5/bin/remote-cli:/home/aymane/.local/bin:/home/aymane/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files/Intel/WiFi/bin/:/mnt/c/Program Files/Common Files/Intel/WirelessCommon/:/mnt/c/Program Files (x86)/Python39-12:/mnt/c/Coq/bin:/mnt/c/Program Files/MATLAB/R2021b/bin/win64:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/MATLAB/R2021b/extern/bin/win64:/mnt/c/Users/Aymane/AppData/Local/Programs/Python/Python39/Scripts/:/mnt/c/Users/Aymane/AppData/Local/Programs/Python/Python39/:/mnt/c/Users/Aymane/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/bin/Firefox_Extension/{442718d9-475e-452a-b3e1-fb1ee16b8e9f}/components:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/ucrt:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/bin/Qt:/mnt/c/Users/Aymane/AppData/Roaming/Dashlane/6.2018.0.34867/bin/Ssl:/mnt/c/Users/Aymane/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/Aymane/AppData/Local/Programs/Microsoft VS Code Insiders/bin:/snap/bin
+ 
 # default
 MAKE = $(MAKE_COMMAND)
 # default
@@ -111,7 +112,7 @@ PATH = /home/aymane/.vscode-server/bin/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5/
 # environment
 SHLVL = 1
 # makefile (from 'makefile', line 1)
-CC = gcc
+CC = gcc 
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -175,7 +176,7 @@ VSCODE_EXTHOST_WILL_SEND_SOCKET = true
 # environment
 WSL_DISTRO_NAME = Ubuntu-20.04
 # variable set hash-table stats:
-# Load=82/1024=8%, Rehash=0, Collisions=5/107=5%
+# Load=82/1024=8%, Rehash=0, Collisions=5/113=4%
 
 # Pattern-specific Variable Values
 
@@ -198,7 +199,9 @@ all: client server
 #  Implicit rule search has been done.
 #  File does not exist.
 #  File has been updated.
-#  Successfully updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/6=0%
 
 client.o: client.c tools.h
 #  Implicit rule search has not been done.
@@ -212,37 +215,43 @@ client: client.o tools.o
 #  Implicit rule search has not been done.
 #  Last modified 2022-05-24 16:22:02.0430227
 #  File has been updated.
-#  Successfully updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/6=0%
 #  recipe to execute (from 'makefile', line 9):
 	$(CC) $(LFLAGS) client.o tools.o -o client
 
 # Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
 tools.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-24 14:50:14.2230227
+#  Last modified 2022-05-24 21:52:03.784644
 #  File has been updated.
 #  Successfully updated.
 
 server.o: server.c tools.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-24 16:22:02.1930227
-#  File has been updated.
-#  Successfully updated.
+#  Modification time never checked.
+#  File has not been updated.
 #  recipe to execute (from 'makefile', line 19):
 	$(CC) $(CFLAGS) server.c
 
 server: server.o tools.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-24 16:22:02.6330227
-#  File has been updated.
-#  Successfully updated.
+#  Modification time never checked.
+#  File has not been updated.
 #  recipe to execute (from 'makefile', line 12):
 	$(CC) $(LFLAGS) server.o tools.o -o server
 
 # Not a target:
 makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-24 16:19:30.5130227
+#  Last modified 2022-05-24 22:01:33.734644
 #  File has been updated.
 #  Successfully updated.
 
@@ -268,10 +277,9 @@ client.c:
 
 # Not a target:
 server.c:
-#  Implicit rule search has been done.
-#  Last modified 2022-05-24 16:19:49.5930227
-#  File has been updated.
-#  Successfully updated.
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 clean:
 #  Implicit rule search has not been done.
@@ -281,16 +289,34 @@ clean:
 	rm -rf *.o *~ client server
 
 tools.o: tools.h tools.c
- 
 #  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
 #  Last modified 2022-05-24 16:22:01.6330227
 #  File has been updated.
-#  Successfully updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := tools.o
+# automatic
+# % := 
+# automatic
+# * := 
+# automatic
+# + := tools.h tools.c
+# automatic
+# | := 
+# automatic
+# < := tools.h
+# automatic
+# ^ := tools.h tools.c
+# automatic
+# ? := tools.c
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=1/14=7%
 #  recipe to execute (from 'makefile', line 22):
 	$(CC) $(CFLAGS) tools.c
 
 # files hash-table stats:
-# Load=14/1024=1%, Rehash=0, Collisions=1/42=2%
+# Load=14/1024=1%, Rehash=0, Collisions=1/43=2%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
@@ -300,9 +326,9 @@ tools.o: tools.h tools.c
 # strcache buffers: 1 (0) / strings = 23 / storage = 191 B / avg = 8 B
 # current buf: size = 8162 B / used = 191 B / count = 23 / avg = 8 B
 
-# strcache performance: lookups = 52 / hit rate = 55%
+# strcache performance: lookups = 53 / hit rate = 56%
 # hash-table stats:
-# Load=23/8192=0%, Rehash=0, Collisions=1/52=2%
-# Finished Make data base on Tue May 24 21:47:34 2022
+# Load=23/8192=0%, Rehash=0, Collisions=1/53=2%
+# Finished Make data base on Tue May 24 23:03:30 2022
 
  
