@@ -1,11 +1,4 @@
-/*
-*
-* Chatroom - a simple linux commandline client/server C program for group chat.
-*/
-
-
 #include "tools.h"
-
 #include <string.h>
 
 void trim_newline(char *text)
