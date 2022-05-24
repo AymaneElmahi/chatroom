@@ -70,7 +70,7 @@ It's a "chatroom" application. It consists of a server and clients. It's like a 
 
 ### Prerequisites
 
-To run this project, you need C language, using the command line.
+To run this project, use the following command line .
 
 ### Installation
 
