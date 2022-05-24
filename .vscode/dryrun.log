@@ -1,0 +1,9 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/aymane/chatroom'
+gcc -Wall -lpthread -c -g client.c
+gcc -Wall -lpthread -c -g tools.c
+gcc -Wall -lpthread -g client.o tools.o -o client
+gcc -Wall -lpthread -c -g server.c
+gcc -Wall -lpthread -g server.o tools.o -o server
+make: Leaving directory '/home/aymane/chatroom'
+ 
