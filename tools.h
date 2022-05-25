@@ -1,13 +1,6 @@
-/*
- *
- * Chatroom - a simple linux commandline client/server C program for group chat.
- * Author: Andrew Herriot
- * License: Public Domain
- *
- */
 
-#ifndef CHATROOM_UTILS_H_
-#define CHATROOM_UTILS_H_
+#ifndef TOOLS_H
+#define TOOLS_H_
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -29,9 +22,9 @@ typedef enum
 {
   CONNECT,
   DISCONNECT,
-  GET_USERS,
-  SET_USERNAME,
-  PUBLIC_MESSAGE,
+  USERS,
+  USERNAME,
+  MESSAGE_TO_ALL,
   PRIVATE_MESSAGE,
   TOO_FULL,
   USERNAME_ERROR,

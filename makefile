@@ -3,23 +3,23 @@ DEBUG = -g
 CFLAGS = -Wall -lpthread -c $(DEBUG)
 LFLAGS = -Wall -lpthread $(DEBUG)
 
-all: client server
+all: client-tcp server-tcp
 
-client: client.o tools.o
-	$(CC) $(LFLAGS) client.o tools.o -o client
+client-tcp: client-tcp.o tools.o
+	$(CC) $(LFLAGS) client-tcp.o tools.o -o client-tcp
 
-server: server.o tools.o
-	$(CC) $(LFLAGS) server.o tools.o -o server
+server-tcp: server-tcp.o tools.o
+	$(CC) $(LFLAGS) server-tcp.o tools.o -o server-tcp
 
 
-client.o: client.c tools.h
-	$(CC) $(CFLAGS) client.c
+client-tcp.o: client-tcp.c tools.h
+	$(CC) $(CFLAGS) client-tcp.c
 
-server.o: server.c tools.h
-	$(CC) $(CFLAGS) server.c
+server-tcp.o: server-tcp.c tools.h
+	$(CC) $(CFLAGS) server-tcp.c
 
 tools.o: tools.h tools.c
 	$(CC) $(CFLAGS) tools.c
 
 clean:
-	rm -rf *.o *~ client server
+	rm -rf *.o *~ client-tcp server-tcp

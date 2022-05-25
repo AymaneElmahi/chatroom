@@ -35,7 +35,7 @@ void get_username(char *username)
 void set_username(info *connection)
 {
   message msg;
-  msg.type = SET_USERNAME;
+  msg.type = USERNAME;
   strncpy(msg.username, connection->username, 20);
 
   if (send(connection->socket, (void *)&msg, sizeof(msg), 0) < 0)
@@ -112,7 +112,7 @@ void handle_user_input(info *connection)
   else if (strcmp(input, "/l") == 0 || strcmp(input, "/list") == 0)
   {
     message msg;
-    msg.type = GET_USERS;
+    msg.type = USERS;
 
     if (send(connection->socket, &msg, sizeof(message), 0) < 0)
     {
@@ -218,7 +218,7 @@ void handle_user_input(info *connection)
   else // regular public message
   {
     message msg;
-    msg.type = PUBLIC_MESSAGE;
+    msg.type = MESSAGE_TO_ALL;
     strncpy(msg.username, connection->username, 20);
 
     if (strlen(input) == 0)
@@ -270,7 +270,7 @@ void handle_server_message(info *connection)
     printf("%s", msg.data);
     break;
 
-  case PUBLIC_MESSAGE:
+  case MESSAGE_TO_ALL:
     printf(KGRN "%s" RESET ": %s\n", msg.username, msg.data);
     break;
 

@@ -1,21 +1,19 @@
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <errno.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
 #include <pthread.h>
-
 #include "tools.h"
 
-#define MAX_CLIENTS 10
+#define CLTS_MAX 10
 
-void start_server(info *server_info, int port)
+void server_start(info *server_info, int port)
 {
     // create a socket
     if ((server_info->socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -23,8 +21,6 @@ void start_server(info *server_info, int port)
         perror("Error: creation socket");
         exit(1);
     }
-
-    // set the socket address
 
     // adress family
     server_info->address.sin_family = AF_INET;
@@ -34,44 +30,46 @@ void start_server(info *server_info, int port)
     server_info->address.sin_port = htons(port);
 
     // bind the socket to the address
-    if (bind(server_info->socket, (struct sockaddr *)&server_info->address, sizeof(server_info->address)) < 0)
+    if (bind(server_info->socket, (struct sockaddr *)&server_info->address, sizeof(server_info->address)) == -1)
     {
         perror("Error: bind ");
         exit(1);
     }
 
     // listen for connections
-    if (listen(server_info->socket, 5) < 0)
+    if (listen(server_info->socket, 5) == -1)
     {
         perror("Error: listen ");
         exit(1);
     }
 
-    // Accept and incoming connection
+    // Accept incoming connection
     printf("Waiting for clients\n");
 }
 
-void send_public_message(info clients[], int sender, char *message_text)
+void message_to_all(info clients[], int id, char *text)
 {
+    // initialize message
     message msg;
-    msg.type = PUBLIC_MESSAGE;
-    strncpy(msg.username, clients[sender].username, 20);
-    strncpy(msg.data, message_text, 256);
-    int i = 0;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    msg.type = MESSAGE_TO_ALL;
+    strncpy(msg.username, clients[id].username, 20);
+    strncpy(msg.data, text, 256);
+
+    // send message to all clients
+    for (int i = 0; i < CLTS_MAX; i++)
     {
-        if (i != sender && clients[i].socket != 0)
+        if (i != id && clients[i].socket != 0)
         {
-            if (send(clients[i].socket, &msg, sizeof(msg), 0) < 0)
+            if (send(clients[i].socket, &msg, sizeof(msg), 0) == -1)
             {
-                perror("Send failed");
+                perror("Error: send");
                 exit(1);
             }
         }
     }
 }
 
-// void send_group_message(info clients[], int sender, char **group, int group_size, char *message_text)
+// void private_group_message(info clients[], int sender, char **group, int group_size, char *message_text)
 // {
 //     message msg;
 //     msg.type = GROUP_MESSAGE;
@@ -82,7 +80,7 @@ void send_public_message(info clients[], int sender, char *message_text)
 //     for (i = 0; i < group_size; i++)
 //     {
 //         int j = 0;
-//         for (j = 0; j < MAX_CLIENTS; j++)
+//         for (j = 0; j < CLTS_MAX; j++)
 //         {
 //             if (strcmp(clients[j].username, group[i]) == 0)
 //             {
@@ -96,21 +94,20 @@ void send_public_message(info clients[], int sender, char *message_text)
 //     }
 // }
 
-void send_private_message(info clients[], int sender, char *username, char *message_text)
+void private_message(info clients[], int id, char *user, char *text)
 {
     message msg;
     msg.type = PRIVATE_MESSAGE;
-    strncpy(msg.username, clients[sender].username, 20);
-    strncpy(msg.data, message_text, 256);
+    strncpy(msg.username, clients[id].username, 20);
+    strncpy(msg.data, text, 256);
 
-    int i;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < CLTS_MAX; i++)
     {
-        if (i != sender && clients[i].socket != 0 && strcmp(clients[i].username, username) == 0)
+        if (i != id && clients[i].socket != 0 && strcmp(clients[i].username, user) == 0)
         {
             if (send(clients[i].socket, &msg, sizeof(msg), 0) < 0)
             {
-                perror("Send failed");
+                perror("Error: send");
                 exit(1);
             }
             return;
@@ -118,22 +115,22 @@ void send_private_message(info clients[], int sender, char *username, char *mess
     }
 
     msg.type = USERNAME_ERROR;
-    sprintf(msg.data, "Username \"%s\" does not exist or is not logged in.", username);
+    sprintf(msg.data, "Username \"%s\" inexistent.", user);
 
-    if (send(clients[sender].socket, &msg, sizeof(msg), 0) < 0)
+    if (send(clients[id].socket, &msg, sizeof(msg), 0) < 0)
     {
-        perror("Send failed");
+        perror("Error: send");
         exit(1);
     }
 }
 
-void send_connect_message(info *clients, int sender)
+void connected_message(info *clients, int sender)
 {
     message msg;
     msg.type = CONNECT;
     strncpy(msg.username, clients[sender].username, 21);
     int i = 0;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    for (i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket != 0)
         {
@@ -164,7 +161,7 @@ void send_disconnect_message(info *clients, char *username)
     msg.type = DISCONNECT;
     strncpy(msg.username, username, 21);
     int i = 0;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    for (i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket != 0)
         {
@@ -180,10 +177,10 @@ void send_disconnect_message(info *clients, char *username)
 void send_user_list(info *clients, int receiver)
 {
     message msg;
-    msg.type = GET_USERS;
+    msg.type = USERS;
     char *list = msg.data;
 
-    for (int i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket != 0)
         {
@@ -216,7 +213,7 @@ void send_too_full_message(int socket)
 // close all the sockets then exit
 void stop_server(info clients[])
 {
-    for (int i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < CLTS_MAX; i++)
     {
         close(clients[i].socket);
     }
@@ -239,13 +236,13 @@ void client_message(info clients[], int id)
 
         switch (msg.type)
         {
-        case GET_USERS:
+        case USERS:
             send_user_list(clients, id);
             break;
 
-        case SET_USERNAME:;
+        case USERNAME:
             int i;
-            for (i = 0; i < MAX_CLIENTS; i++)
+            for (i = 0; i < CLTS_MAX; i++)
             {
                 if (clients[i].socket != 0 && strcmp(clients[i].username, msg.username) == 0)
                 {
@@ -257,15 +254,15 @@ void client_message(info clients[], int id)
 
             strcpy(clients[id].username, msg.username);
             printf(KGRN "Client connected: %s\n" RESET, clients[id].username);
-            send_connect_message(clients, id);
+            connected_message(clients, id);
             break;
 
-        case PUBLIC_MESSAGE:
-            send_public_message(clients, id, msg.data);
+        case MESSAGE_TO_ALL:
+            message_to_all(clients, id, msg.data);
             break;
 
         case PRIVATE_MESSAGE:
-            send_private_message(clients, id, msg.username, msg.data);
+            private_message(clients, id, msg.username, msg.data);
             break;
 
             // case GROUP_MESSAGE:
@@ -283,7 +280,7 @@ int get_max_fd(fd_set *set, info *server_info, info clients[])
 {
     int max_fd = server_info->socket;
     int i;
-    for (i = 0; i < MAX_CLIENTS; i++)
+    for (i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket > 0)
         {
@@ -308,14 +305,14 @@ void case_connection(info *server_info, info clients[])
         exit(1);
     }
 
-    for (int i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket == 0)
         {
             clients[i].socket = new_socket;
             break;
         }
-        else if (i == MAX_CLIENTS - 1)
+        else if (i == CLTS_MAX - 1)
         {
             send_too_full_message(new_socket);
         }
@@ -347,11 +344,11 @@ int main(int argc, char *argv[])
 
     // initialize server and client info
     info server_info;
-    info clients[MAX_CLIENTS];
+    info clients[CLTS_MAX];
     memset(clients, 0, sizeof(clients));
 
     // initialize server socket
-    start_server(&server_info, atoi(argv[1]));
+    server_start(&server_info, atoi(argv[1]));
 
     // initialize fd_set
     fd_set fds;
@@ -385,7 +382,7 @@ int main(int argc, char *argv[])
         }
 
         // case: client message
-        for (int i = 0; i < MAX_CLIENTS; i++)
+        for (int i = 0; i < CLTS_MAX; i++)
         {
             if (clients[i].socket > 0 && FD_ISSET(clients[i].socket, &read_fds))
             {
