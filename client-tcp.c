@@ -159,11 +159,11 @@ void user_input(info *connection)
   // check if the user wants to see help
   else if (!strcmp(input, "/h") || !strcmp(input, "/help"))
   {
-    printf("/quit or /q: Exit the server.");
-    printf("/help or /h: Show help .");
-    printf("/list or /l: Show list of connected users.");
-    printf("/m <username> <message> Send a private message to a specified user.");
-    // printf("/g <username1> <username2> ... <message> Send a private message to given users.");
+    printf("/quit or /q: Exit the server.\n");
+    printf("/help or /h: Show help .\n");
+    printf("/list or /l: Show list of connected users.\n");
+    printf("/m <username> <message> Send a private message to a specified user.\n");
+    // printf("/g <username1> <username2> ... <message> Send a private message to given users.\n");
   }
   // if the user wants to send a private message
   else if (!strncmp(input, "/m", 2))
