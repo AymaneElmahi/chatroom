@@ -3,16 +3,16 @@
 #include <assert.h>
 #include <stdlib.h>
 
-void trim_newline(char *text)
+void delete_line(char *input)
 {
-  int len = strlen(text) - 1;
-  if (text[len] == '\n')
+  int len = strlen(input) - 1;
+  if (input[len] == '\n')
   {
-    text[len] = '\0';
+    input[len] = '\0';
   }
 }
 
-void clear_stdin_buffer()
+void cleanbuffer()
 {
   int c;
   while ((c = getchar()) != '\n' && c != EOF)

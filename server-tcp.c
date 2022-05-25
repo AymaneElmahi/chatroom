@@ -1,18 +1,24 @@
 
+#include <unistd.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <pthread.h>
+#include "tools.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <pthread.h>
-#include "tools.h"
 
 #define CLTS_MAX 10
 
+/**
+ * @brief start the server and wait for connections.
+ *
+ * @param server_info  the server information
+ * @param port       the port to listen on
+ */
 void server_start(info *server_info, int port)
 {
     // create a socket
@@ -47,13 +53,20 @@ void server_start(info *server_info, int port)
     printf("Waiting for clients\n");
 }
 
+/**
+ * @brief  send a message to all clients
+ *
+ * @param clients  the clients
+ * @param id    the id of the sender
+ * @param text  the text to send
+ */
 void message_to_all(info clients[], int id, char *text)
 {
     // initialize message
     message msg;
     msg.type = MESSAGE_TO_ALL;
-    strncpy(msg.username, clients[id].username, 20);
-    strncpy(msg.data, text, 256);
+    strncpy(msg.user, clients[id].username, 20);
+    strncpy(msg.text, text, 256);
 
     // send message to all clients
     for (int i = 0; i < CLTS_MAX; i++)
@@ -69,15 +82,14 @@ void message_to_all(info clients[], int id, char *text)
     }
 }
 
-// void private_group_message(info clients[], int sender, char **group, int group_size, char *message_text)
+// void private_group_message(info clients[], int id, char **group, int group_size, char *text)
 // {
 //     message msg;
 //     msg.type = GROUP_MESSAGE;
-//     strncpy(msg.username, clients[sender].username, 20);
-//     strncpy(msg.data, message_text, 256);
+//     strncpy(msg.user, clients[id].username, 20);
+//     strncpy(msg.text, text, 256);
 //     // send to all clients in the group
-//     int i = 0;
-//     for (i = 0; i < group_size; i++)
+//     for (int i = 0; i < group_size; i++)
 //     {
 //         int j = 0;
 //         for (j = 0; j < CLTS_MAX; j++)
@@ -86,7 +98,7 @@ void message_to_all(info clients[], int id, char *text)
 //             {
 //                 if (send(clients[j].socket, &msg, sizeof(msg), 0) < 0)
 //                 {
-//                     perror("Send failed");
+//                     perror("Error: send");
 //                     exit(1);
 //                 }
 //             }
@@ -94,13 +106,23 @@ void message_to_all(info clients[], int id, char *text)
 //     }
 // }
 
+/**
+ * @brief  send a message to a specific client
+ *
+ * @param clients  the clients
+ * @param id    the id of the sender
+ * @param text  the text to send
+ * @param target  the target client
+ */
 void private_message(info clients[], int id, char *user, char *text)
 {
+    // initialize message
     message msg;
-    msg.type = PRIVATE_MESSAGE;
-    strncpy(msg.username, clients[id].username, 20);
-    strncpy(msg.data, text, 256);
+    msg.type = PRIVATE;
+    strncpy(msg.user, clients[id].username, 20);
+    strncpy(msg.text, text, 256);
 
+    // send message to specified user
     for (int i = 0; i < CLTS_MAX; i++)
     {
         if (i != id && clients[i].socket != 0 && strcmp(clients[i].username, user) == 0)
@@ -114,8 +136,9 @@ void private_message(info clients[], int id, char *user, char *text)
         }
     }
 
-    msg.type = USERNAME_ERROR;
-    sprintf(msg.data, "Username \"%s\" inexistent.", user);
+    // send error message to client
+    msg.type = ERROR_NAME;
+    sprintf(msg.text, "Username \"%s\" inexistent.", user);
 
     if (send(clients[id].socket, &msg, sizeof(msg), 0) < 0)
     {
@@ -124,22 +147,30 @@ void private_message(info clients[], int id, char *user, char *text)
     }
 }
 
-void connected_message(info *clients, int sender)
+/**
+ * @brief  handle when a client is connected
+ *
+ * @param clients  the clients
+ * @param id  the id of the client
+ */
+void connecting_message(info *clients, int id)
 {
+    // initialize message
     message msg;
-    msg.type = CONNECT;
-    strncpy(msg.username, clients[sender].username, 21);
-    int i = 0;
-    for (i = 0; i < CLTS_MAX; i++)
+    msg.type = CONNECTING;
+    strncpy(msg.user, clients[id].username, 21);
+
+    // send message to all clients
+    for (int i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket != 0)
         {
-            if (i == sender)
+            if (i == id)
             {
                 msg.type = SUCCESS;
                 if (send(clients[i].socket, &msg, sizeof(msg), 0) < 0)
                 {
-                    perror("Send failed");
+                    perror("Error: send");
                     exit(1);
                 }
             }
@@ -147,7 +178,7 @@ void connected_message(info *clients, int sender)
             {
                 if (send(clients[i].socket, &msg, sizeof(msg), 0) < 0)
                 {
-                    perror("Send failed");
+                    perror("Error: send");
                     exit(1);
                 }
             }
@@ -155,13 +186,21 @@ void connected_message(info *clients, int sender)
     }
 }
 
-void send_disconnect_message(info *clients, char *username)
+/**
+ * @brief  handle when a client is disconnected
+ *
+ * @param clients  the clients
+ * @param name  the name of the client
+ */
+void disconnecting_message(info *clients, char *name)
 {
+    // initialize message
     message msg;
-    msg.type = DISCONNECT;
-    strncpy(msg.username, username, 21);
-    int i = 0;
-    for (i = 0; i < CLTS_MAX; i++)
+    msg.type = DISCONNECTING;
+    strncpy(msg.user, name, 21);
+
+    // send message to all clients
+    for (int i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket != 0)
         {
@@ -174,12 +213,20 @@ void send_disconnect_message(info *clients, char *username)
     }
 }
 
-void send_user_list(info *clients, int receiver)
+/**
+ * @brief  handle when a client is typing /list
+ *
+ * @param clients  the clients
+ * @param id  the id of the client typing /list
+ */
+void show_users(info *clients, int id)
 {
+    // initialize message
     message msg;
     msg.type = USERS;
-    char *list = msg.data;
+    char *list = msg.text;
 
+    // send message
     for (int i = 0; i < CLTS_MAX; i++)
     {
         if (clients[i].socket != 0)
@@ -189,19 +236,26 @@ void send_user_list(info *clients, int receiver)
         }
     }
 
-    if (send(clients[receiver].socket, &msg, sizeof(msg), 0) < 0)
+    if (send(clients[id].socket, &msg, sizeof(msg), 0) < 0)
     {
         perror("Error: send");
         exit(1);
     }
 }
 
-void send_too_full_message(int socket)
+/**
+ * @brief  handle when more than CLTS_MAX clients are connected
+ *
+ * @param socket  the socket
+ */
+void full_message(int socket)
 {
-    message too_full_message;
-    too_full_message.type = TOO_FULL;
+    // initialize message
+    message full_message;
+    full_message.type = FULL;
 
-    if (send(socket, &too_full_message, sizeof(too_full_message), 0) < 0)
+    // send message to client
+    if (send(socket, &full_message, sizeof(full_message), 0) < 0)
     {
         perror("Error: send");
         exit(1);
@@ -210,7 +264,11 @@ void send_too_full_message(int socket)
     close(socket);
 }
 
-// close all the sockets then exit
+/**
+ * @brief  close the server
+ *
+ * @param clients  the clients
+ */
 void stop_server(info clients[])
 {
     for (int i = 0; i < CLTS_MAX; i++)
@@ -220,16 +278,22 @@ void stop_server(info clients[])
     exit(0);
 }
 
+/**
+ * @brief  handle when a message arrives in the server
+ *
+ * @param clients  the clients
+ * @param id  the id of the sender
+ */
 void client_message(info clients[], int id)
 {
     message msg;
 
     if ((recv(clients[id].socket, &msg, sizeof(message), 0)) == 0)
     {
-        printf(KRED "Client disconnected: %s.\n" RESET, clients[id].username);
+        printf(red "Client disconnected: %s.\n" defaultcolor, clients[id].username);
         close(clients[id].socket);
         clients[id].socket = 0;
-        send_disconnect_message(clients, clients[id].username);
+        disconnecting_message(clients, clients[id].username);
     }
     else
     {
@@ -237,14 +301,13 @@ void client_message(info clients[], int id)
         switch (msg.type)
         {
         case USERS:
-            send_user_list(clients, id);
+            show_users(clients, id);
             break;
 
         case USERNAME:
-            int i;
-            for (i = 0; i < CLTS_MAX; i++)
+            for (int i = 0; i < CLTS_MAX; i++)
             {
-                if (clients[i].socket != 0 && strcmp(clients[i].username, msg.username) == 0)
+                if (clients[i].socket != 0 && strcmp(clients[i].username, msg.user) == 0)
                 {
                     close(clients[id].socket);
                     clients[id].socket = 0;
@@ -252,21 +315,21 @@ void client_message(info clients[], int id)
                 }
             }
 
-            strcpy(clients[id].username, msg.username);
-            printf(KGRN "Client connected: %s\n" RESET, clients[id].username);
-            connected_message(clients, id);
+            strcpy(clients[id].username, msg.user);
+            printf(green "Client connected: %s\n" defaultcolor, clients[id].username);
+            connecting_message(clients, id);
             break;
 
         case MESSAGE_TO_ALL:
-            message_to_all(clients, id, msg.data);
+            message_to_all(clients, id, msg.text);
             break;
 
-        case PRIVATE_MESSAGE:
-            private_message(clients, id, msg.username, msg.data);
+        case PRIVATE:
+            private_message(clients, id, msg.user, msg.text);
             break;
 
             // case GROUP_MESSAGE:
-            //     send_group_message(clients, id, msg.group, msg.group_size, msg.data);
+            //     group_message(clients, id, msg.group, msg.group_size, msg.data);
             //     break;
 
         default:
@@ -276,7 +339,15 @@ void client_message(info clients[], int id)
     }
 }
 
-int get_max_fd(fd_set *set, info *server_info, info clients[])
+/**
+ * @brief Get the max fd of the clients
+ *
+ * @param fds  the descriptors
+ * @param server_info  the server info
+ * @param clients  the clients
+ * @return int  the max fd
+ */
+int get_max_fd(fd_set *fds, info *server_info, info clients[])
 {
     int max_fd = server_info->socket;
     int i;
@@ -284,7 +355,7 @@ int get_max_fd(fd_set *set, info *server_info, info clients[])
     {
         if (clients[i].socket > 0)
         {
-            FD_SET(clients[i].socket, set);
+            FD_SET(clients[i].socket, fds);
             if (clients[i].socket > max_fd)
             {
                 max_fd = clients[i].socket;
@@ -294,6 +365,12 @@ int get_max_fd(fd_set *set, info *server_info, info clients[])
     return max_fd;
 }
 
+/**
+ * @brief  what to do when a client is connected
+ *
+ * @param server_info  the server info
+ * @param clients  the clients
+ */
 void case_connection(info *server_info, info clients[])
 {
     int new_socket;
@@ -314,7 +391,7 @@ void case_connection(info *server_info, info clients[])
         }
         else if (i == CLTS_MAX - 1)
         {
-            send_too_full_message(new_socket);
+            full_message(new_socket);
         }
     }
 }
@@ -323,7 +400,7 @@ void case_user(info clients[])
 {
     char input[255];
     fgets(input, sizeof(input), stdin);
-    trim_newline(input);
+    delete_line(input);
 
     if (input[0] == 'q')
     {
