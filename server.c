@@ -71,8 +71,32 @@ void send_public_message(info clients[], int sender, char *message_text)
     }
 }
 
-void send_private_message(info clients[], int sender,
-                          char *username, char *message_text)
+// void send_group_message(info clients[], int sender, char **group, int group_size, char *message_text)
+// {
+//     message msg;
+//     msg.type = GROUP_MESSAGE;
+//     strncpy(msg.username, clients[sender].username, 20);
+//     strncpy(msg.data, message_text, 256);
+//     // send to all clients in the group
+//     int i = 0;
+//     for (i = 0; i < group_size; i++)
+//     {
+//         int j = 0;
+//         for (j = 0; j < MAX_CLIENTS; j++)
+//         {
+//             if (strcmp(clients[j].username, group[i]) == 0)
+//             {
+//                 if (send(clients[j].socket, &msg, sizeof(msg), 0) < 0)
+//                 {
+//                     perror("Send failed");
+//                     exit(1);
+//                 }
+//             }
+//         }
+//     }
+// }
+
+void send_private_message(info clients[], int sender, char *username, char *message_text)
 {
     message msg;
     msg.type = PRIVATE_MESSAGE;
@@ -244,6 +268,10 @@ void client_message(info clients[], int id)
             send_private_message(clients, id, msg.username, msg.data);
             break;
 
+            // case GROUP_MESSAGE:
+            //     send_group_message(clients, id, msg.group, msg.group_size, msg.data);
+            //     break;
+
         default:
             fprintf(stderr, "Unknown message type received.\n");
             break;
@@ -253,7 +281,6 @@ void client_message(info clients[], int id)
 
 int get_max_fd(fd_set *set, info *server_info, info clients[])
 {
-
     int max_fd = server_info->socket;
     int i;
     for (i = 0; i < MAX_CLIENTS; i++)
@@ -312,11 +339,11 @@ int main(int argc, char *argv[])
     // check if the port number is given
     if (argc != 2)
     {
-        fprintf(stderr, KRED "Usage: %s <port>\n" RESET, argv[0]);
+        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
         exit(1);
     }
 
-    printf(KGRN "Server started.\n" RESET);
+    printf("Server started...\n");
 
     // initialize server and client info
     info server_info;
