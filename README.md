@@ -54,7 +54,7 @@
 ## About The Project
 
 First of all we should note that this is a school project.
-It's a "chatroom" application. It consists of a server and clients. It's like a message group on Whatsapp or messenger or whatever. Using the same locam IP adress and the same port, the clients can connect to the server and send messages to each other.
+It's a "chatroom" application. It consists of a server and clients. It's like a message group on Whatsapp or Messenger or whatever. Using the same local IP adress and the same port, the clients can connect to the server and send messages to each other.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
